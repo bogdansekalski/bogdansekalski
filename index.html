@@ -4,53 +4,148 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>bogdan sėkalski</title>
+
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: none;
+  }
+
   body {
-    width: 100vw; height: 100vh; overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
     background: linear-gradient(160deg, #c9dff5 0%, #a8c8e8 40%, #daeaf7 100%);
     position: relative;
   }
-  #scene { position: relative; width: 100%; height: 100%; }
+
+  #scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
   #figure {
-    position: absolute; bottom: 8%; left: 12%;
-    height: 72vh; max-height: 600px; z-index: 10;
-    user-select: none; pointer-events: none;
+    position: absolute;
+    bottom: 8%;
+    left: 12%;
+    height: 72vh;
+    max-height: 600px;
+    z-index: 10;
+    user-select: none;
+    pointer-events: none;
   }
+
   #chain-canvas {
-    position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%; z-index: 5; pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    pointer-events: none;
   }
+
   #sun-cursor {
-    position: fixed; pointer-events: none; z-index: 9999;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
     transform: translate(-50%, -50%);
-    width: 300px; height: 300px;
+    width: 300px;
+    height: 300px;
   }
+
   #sun-cursor img {
-    width: 100%; height: 100%;
+    width: 100%;
+    height: 100%;
     animation: glowPulse 1s ease-in-out infinite;
   }
+
   @keyframes glowPulse {
-    0%, 100% { filter: drop-shadow(0 0 14px rgba(255,240,80,0.7)) brightness(1); }
-    50%       { filter: drop-shadow(0 0 30px rgba(255,245,120,1)) brightness(1.15); }
+    0%, 100% {
+      filter: drop-shadow(0 0 14px rgba(255,240,80,0.7)) brightness(1);
+    }
+
+    50% {
+      filter: drop-shadow(0 0 30px rgba(255,245,120,1)) brightness(1.15);
+    }
   }
+
   #hint {
-    position: absolute; bottom: 3%; left: 50%; transform: translateX(-50%);
-    color: rgba(60,90,130,0.6); font-size: 12px; letter-spacing: 0.14em;
-    text-transform: uppercase; pointer-events: none; z-index: 20;
-    font-family: Georgia, serif; text-shadow: 0 1px 3px rgba(255,255,255,0.7);
+    position: absolute;
+    bottom: 3%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(60,90,130,0.6);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 20;
+    font-family: Georgia, serif;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.7);
+  }
+
+  /* FILM GRAIN OVERLAY */
+
+  #film-grain {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+
+    background-image: url("grain1.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: repeat;
+
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+
+    animation: grainFlicker 0.18s steps(1) infinite;
+  }
+
+  @keyframes grainFlicker {
+    0% {
+      background-image: url("grain1.png");
+      transform: translate(0, 0) scale(1.03);
+    }
+
+    33% {
+      background-image: url("grain2.png");
+      transform: translate(-1%, 1%) scale(1.03);
+    }
+
+    66% {
+      background-image: url("grain3.png");
+      transform: translate(1%, -1%) scale(1.03);
+    }
+
+    100% {
+      background-image: url("grain1.png");
+      transform: translate(0.5%, -0.5%) scale(1.03);
+    }
   }
 </style>
 </head>
+
 <body>
+
 <div id="scene">
   <img id="figure" src="model fbp.png" alt="Figure" />
   <canvas id="chain-canvas"></canvas>
 </div>
+
 <div id="sun-cursor">
   <img src="sun.png" alt="sun" />
 </div>
+
 <div id="hint"></div>
+
+<div id="film-grain"></div>
+
 <script>
   const canvas = document.getElementById('chain-canvas');
   const ctx = canvas.getContext('2d');
@@ -64,14 +159,16 @@
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
+
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
   document.addEventListener('mousemove', (e) => {
     mouseX = e.clientX;
     mouseY = e.clientY;
+
     sunCursor.style.left = mouseX + 'px';
-    sunCursor.style.top  = mouseY + 'px';
+    sunCursor.style.top = mouseY + 'px';
   });
 
   const chainImg = new Image();
@@ -79,103 +176,180 @@
 
   function getAnklePos() {
     const rect = figure.getBoundingClientRect();
+
     return {
       x: rect.left + rect.width * 0.55,
-      y: rect.top  + rect.height * 0.94
+      y: rect.top + rect.height * 0.94
     };
   }
 
   const NUM_LINKS = 16;
-  const LINK_LEN  = 34;
-  const GRAVITY   = 0.55;
-  const DAMPING   = 0.97;
-  const ITERS     = 22;
+  const LINK_LEN = 34;
+  const GRAVITY = 0.55;
+  const DAMPING = 0.97;
+  const ITERS = 22;
+
   let nodes = [];
   let ready = false;
 
   function initNodes() {
     const a = getAnklePos();
+
     nodes = [];
+
     for (let i = 0; i <= NUM_LINKS; i++) {
       const t = i / NUM_LINKS;
-      nodes.push({ x: a.x + (mouseX-a.x)*t, y: a.y + (mouseY-a.y)*t,
-                   px: a.x + (mouseX-a.x)*t, py: a.y + (mouseY-a.y)*t });
+
+      nodes.push({
+        x: a.x + (mouseX - a.x) * t,
+        y: a.y + (mouseY - a.y) * t,
+        px: a.x + (mouseX - a.x) * t,
+        py: a.y + (mouseY - a.y) * t
+      });
     }
+
     ready = true;
   }
 
   function simulate() {
     const a = getAnklePos();
+
     for (let i = 1; i < nodes.length - 1; i++) {
       const n = nodes[i];
+
       const vx = (n.x - n.px) * DAMPING;
       const vy = (n.y - n.py) * DAMPING;
-      n.px = n.x; n.py = n.y;
-      n.x += vx; n.y += vy + GRAVITY;
+
+      n.px = n.x;
+      n.py = n.y;
+
+      n.x += vx;
+      n.y += vy + GRAVITY;
     }
+
     for (let it = 0; it < ITERS; it++) {
-      nodes[0].x = a.x; nodes[0].y = a.y;
-      nodes[NUM_LINKS].x = mouseX; nodes[NUM_LINKS].y = mouseY;
+      nodes[0].x = a.x;
+      nodes[0].y = a.y;
+
+      nodes[NUM_LINKS].x = mouseX;
+      nodes[NUM_LINKS].y = mouseY;
+
       for (let i = 0; i < NUM_LINKS; i++) {
-        const p = nodes[i], q = nodes[i+1];
-        const dx = q.x - p.x, dy = q.y - p.y;
-        const dist = Math.sqrt(dx*dx + dy*dy) || 0.001;
+        const p = nodes[i];
+        const q = nodes[i + 1];
+
+        const dx = q.x - p.x;
+        const dy = q.y - p.y;
+
+        const dist = Math.sqrt(dx * dx + dy * dy) || 0.001;
         const diff = (dist - LINK_LEN) / dist * 0.5;
-        if (i > 0)             { p.x += dx*diff; p.y += dy*diff; }
-        if (i < NUM_LINKS - 1) { q.x -= dx*diff; q.y -= dy*diff; }
+
+        if (i > 0) {
+          p.x += dx * diff;
+          p.y += dy * diff;
+        }
+
+        if (i < NUM_LINKS - 1) {
+          q.x -= dx * diff;
+          q.y -= dy * diff;
+        }
       }
-      nodes[0].x = a.x; nodes[0].y = a.y;
-      nodes[NUM_LINKS].x = mouseX; nodes[NUM_LINKS].y = mouseY;
+
+      nodes[0].x = a.x;
+      nodes[0].y = a.y;
+
+      nodes[NUM_LINKS].x = mouseX;
+      nodes[NUM_LINKS].y = mouseY;
     }
   }
 
-  const LW = 22, LH = 38;
+  const LW = 22;
+  const LH = 38;
 
   function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (chainImg.complete && chainImg.naturalWidth) {
       for (let i = 0; i < NUM_LINKS; i++) {
-        const a = nodes[i], b = nodes[i+1];
-        const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+        const a = nodes[i];
+        const b = nodes[i + 1];
+
+        const cx = (a.x + b.x) / 2;
+        const cy = (a.y + b.y) / 2;
+
         const angle = Math.atan2(b.y - a.y, b.x - a.x);
+
         ctx.save();
         ctx.translate(cx, cy);
-        ctx.rotate(angle + Math.PI/2 + (i % 2 === 0 ? 0 : Math.PI/2));
-        ctx.drawImage(chainImg, -LW/2, -LH/2, LW, LH);
+        ctx.rotate(angle + Math.PI / 2 + (i % 2 === 0 ? 0 : Math.PI / 2));
+        ctx.drawImage(chainImg, -LW / 2, -LH / 2, LW, LH);
         ctx.restore();
       }
     }
 
     // Ankle shackle ring
     const ankle = getAnklePos();
+
     ctx.save();
     ctx.translate(ankle.x, ankle.y);
-    const sg = ctx.createRadialGradient(-3,-3,1,0,0,12);
-    sg.addColorStop(0,'#e0e8f0'); sg.addColorStop(1,'#8090a8');
-    ctx.fillStyle = sg; ctx.strokeStyle = '#607080'; ctx.lineWidth = 2;
-    ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 6;
-    ctx.beginPath(); ctx.arc(0,0,12,0,Math.PI*2); ctx.fill(); ctx.stroke();
+
+    const sg = ctx.createRadialGradient(-3, -3, 1, 0, 0, 12);
+    sg.addColorStop(0, '#e0e8f0');
+    sg.addColorStop(1, '#8090a8');
+
+    ctx.fillStyle = sg;
+    ctx.strokeStyle = '#607080';
+    ctx.lineWidth = 2;
+
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = 6;
+
+    ctx.beginPath();
+    ctx.arc(0, 0, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
     ctx.fillStyle = 'rgba(60,80,100,0.6)';
-    ctx.beginPath(); ctx.arc(0,0,5,0,Math.PI*2); ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(0, 0, 5, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.restore();
 
     // Glow halo under sun
-    const glow = ctx.createRadialGradient(mouseX,mouseY,0,mouseX,mouseY,75);
-    glow.addColorStop(0,'rgba(255,245,180,0.22)');
-    glow.addColorStop(1,'rgba(255,220,80,0)');
-    ctx.beginPath(); ctx.arc(mouseX,mouseY,75,0,Math.PI*2);
-    ctx.fillStyle = glow; ctx.fill();
+    const glow = ctx.createRadialGradient(mouseX, mouseY, 0, mouseX, mouseY, 75);
+
+    glow.addColorStop(0, 'rgba(255,245,180,0.22)');
+    glow.addColorStop(1, 'rgba(255,220,80,0)');
+
+    ctx.beginPath();
+    ctx.arc(mouseX, mouseY, 75, 0, Math.PI * 2);
+    ctx.fillStyle = glow;
+    ctx.fill();
   }
 
   function loop() {
     if (!ready) initNodes();
-    simulate(); draw();
+
+    simulate();
+    draw();
+
     requestAnimationFrame(loop);
   }
 
-  if (figure.complete && figure.naturalWidth) { initNodes(); loop(); }
-  else { figure.onload = () => { initNodes(); loop(); }; loop(); }
+  if (figure.complete && figure.naturalWidth) {
+    initNodes();
+    loop();
+  } else {
+    figure.onload = () => {
+      initNodes();
+      loop();
+    };
+
+    loop();
+  }
 </script>
+
 </body>
 </html>
