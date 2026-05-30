@@ -19,7 +19,6 @@
     overflow: hidden;
     background: linear-gradient(160deg, #c9dff5 0%, #a8c8e8 40%, #daeaf7 100%);
     position: relative;
-    touch-action: none;
   }
 
   #scene {
@@ -129,27 +128,6 @@
       transform: translate(0.5%, -0.5%) scale(1.03);
     }
   }
-
-  @media (hover: none), (pointer: coarse) {
-    * {
-      cursor: auto;
-    }
-
-    #sun-cursor {
-      width: 220px;
-      height: 220px;
-    }
-
-    #hint::after {
-      content: "tap to move the sun";
-    }
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    #hint::after {
-      content: "";
-    }
-  }
 </style>
 </head>
 
@@ -177,66 +155,20 @@
   let mouseX = window.innerWidth * 0.72;
   let mouseY = window.innerHeight * 0.32;
 
-  const isTouchDevice =
-    window.matchMedia('(hover: none), (pointer: coarse)').matches ||
-    'ontouchstart' in window ||
-    navigator.maxTouchPoints > 0;
-
-  function updateSunPosition(x, y) {
-    mouseX = x;
-    mouseY = y;
-
-    sunCursor.style.left = mouseX + 'px';
-    sunCursor.style.top = mouseY + 'px';
-  }
-
-  updateSunPosition(mouseX, mouseY);
-
   function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-
-    mouseX = Math.min(mouseX, window.innerWidth);
-    mouseY = Math.min(mouseY, window.innerHeight);
-
-    updateSunPosition(mouseX, mouseY);
-
-    if (ready) {
-      initNodes();
-    }
   }
 
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
-  if (!isTouchDevice) {
-    document.addEventListener('mousemove', (e) => {
-      updateSunPosition(e.clientX, e.clientY);
-    });
-  }
+  document.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
 
-  document.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-
-    if (e.touches.length > 0) {
-      const touch = e.touches[0];
-      updateSunPosition(touch.clientX, touch.clientY);
-    }
-  }, { passive: false });
-
-  document.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-
-    if (e.touches.length > 0) {
-      const touch = e.touches[0];
-      updateSunPosition(touch.clientX, touch.clientY);
-    }
-  }, { passive: false });
-
-  document.addEventListener('click', (e) => {
-    if (isTouchDevice) {
-      updateSunPosition(e.clientX, e.clientY);
-    }
+    sunCursor.style.left = mouseX + 'px';
+    sunCursor.style.top = mouseY + 'px';
   });
 
   const chainImg = new Image();
