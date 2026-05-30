@@ -152,8 +152,13 @@
   const sunCursor = document.getElementById('sun-cursor');
   const figure = document.getElementById('figure');
 
+  // Default starting position: upper-right area, looks natural on load
   let mouseX = window.innerWidth * 0.72;
-  let mouseY = window.innerHeight * 0.32;
+  let mouseY = window.innerHeight * 0.28;
+
+  // Position sun cursor at default location immediately
+  sunCursor.style.left = mouseX + 'px';
+  sunCursor.style.top = mouseY + 'px';
 
   function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -161,8 +166,12 @@
   }
 
   resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+    // Keep sun in a reasonable position if window is resized before interaction
+  });
 
+  // Mouse movement
   document.addEventListener('mousemove', (e) => {
     mouseX = e.clientX;
     mouseY = e.clientY;
@@ -170,6 +179,22 @@
     sunCursor.style.left = mouseX + 'px';
     sunCursor.style.top = mouseY + 'px';
   });
+
+  // Touch support — follow finger drag on mobile
+  function handleTouch(e) {
+    e.preventDefault(); // prevent scroll while dragging the sun
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    mouseX = touch.clientX;
+    mouseY = touch.clientY;
+
+    sunCursor.style.left = mouseX + 'px';
+    sunCursor.style.top = mouseY + 'px';
+  }
+
+  document.addEventListener('touchstart', handleTouch, { passive: false });
+  document.addEventListener('touchmove', handleTouch, { passive: false });
 
   const chainImg = new Image();
   chainImg.src = 'chain-piece.png';
